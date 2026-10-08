@@ -33,14 +33,16 @@ El primer modelo combina TF-IDF de palabras individuales con regresión logísti
 | TF-IDF del texto completo y última oración + regresión logística | 87,53 % | 1,55 puntos porcentuales |
 | SVM lineal + TF-IDF de palabras y caracteres por bloques | 88,91 % | 0,95 puntos porcentuales |
 | Rasgos estructurales + HistGradientBoosting | 90,91 % | 0,85 puntos porcentuales |
+| Detector gramatical flexible + HistGradientBoosting | 90,79 % | 0,80 puntos porcentuales |
+| Detector gramatical + stacking + SVM calibrada | 91,13 % | 0,90 puntos porcentuales |
 
 En el primer modelo, el recall de neutral fue 99,5 %, frente a 60,4 % y 61,4 % de negativo y positivo. El quinto mejora estos últimos a 88,2 % y 86,4 %.
 
 ## Estado del proyecto
 
-Comparamos cinco configuraciones con validación cruzada. En Kaggle, los primeros cuatro envíos obtuvieron 0.72333, 0.72777, 0.88000 y 0.88444. El quinto supera 90 % en promedio local y repite 90,91 % al cambiar las particiones, pero su score público está pendiente.
+Comparamos siete configuraciones. Los primeros cinco scores públicos fueron 0.72333, 0.72777, 0.88000, 0.88444 y 0.87333. El cuarto sigue siendo el mejor envío público conocido; el quinto no confirmó su ventaja local. El sexto y el séptimo quedan pendientes de subir. El séptimo es el envío recomendado por su mejor validación local.
 
-También probamos combinar el estructural con SVM calibrada (pesos 70/30): obtuvo el mismo promedio y tardó más. Preferimos el estructural solo. Aún falta evaluar la configuración elegida en las 2.400 reseñas reservadas.
+El sexto amplía el detector para reconocer adverbios y variantes verbales. Mantiene 90,79 % local y obtiene 90,75 % al añadir adverbios a las reseñas evaluadas; el quinto cae a 48,38 % en esa prueba. No mejora el promedio normal, pero corrige esa fragilidad. Aún falta evaluar la configuración elegida en las 2.400 reseñas reservadas.
 
 La primera parte no utiliza redes neuronales, transformers ni embeddings neuronales preentrenados.
 
@@ -53,6 +55,8 @@ Al ejecutar todas las celdas, la sección final entrena cada configuración con 
 - `submissions/submission_03_tfidf_completo_ultima_oracion_logreg.csv`
 - `submissions/submission_04_tfidf_bloques_svm.csv`
 - `submissions/submission_05_estructural_hgb.csv`
+- `submissions/submission_06_estructural_robusto_hgb.csv`
+- `submissions/submission_07_ensemble.csv`
 
 Cada archivo contiene 3.000 filas con las columnas `id,answer`. Al repetir la ejecución se actualizan los mismos archivos. La generación no los sube a Kaggle; los envíos se realizan manualmente. Los nuevos modelos se agregan al diccionario `modelos_submission` al final del notebook.
 
@@ -62,6 +66,10 @@ El cuarto usa una SVM lineal con palabras y caracteres sobre el texto completo, 
 
 El quinto cuenta opiniones, distingue su posición y los conectores, y usa HistGradientBoosting para clasificarlas. La normalización de tildes ya se usaba en el cuarto intento; en el quinto añadimos corrección de escritura y estructura de opiniones.
 
-Las expresiones están definidas para este tipo de reseñas. Pueden hacer optimista la validación y no necesariamente generalizan a otros datos. **90,91 % local no garantiza 0.90 en Kaggle.**
+Las expresiones están definidas para este tipo de reseñas. Pueden hacer optimista la validación y no necesariamente generalizan a otros datos. **Superar 90 % local no garantiza 0.90 en Kaggle.**
+
+El sexto mantiene las mismas características y árboles, pero flexibiliza cómo reconoce las opiniones. La prueba con adverbios mide esa mejora concreta, no la resistencia a cualquier texto nuevo.
+
+El séptimo combina el detector gramatical, seis regresiones logísticas por bloques con árboles como meta-modelo (stacking), y SVM calibrada. Los pesos finales son fijos (50/30/20), elegidos antes de evaluar. Obtuvo 91,13 % local; todavía falta conocer su score público. Su entrenamiento tarda más que el de los modelos anteriores.
 
 Todo el código está en el notebook. Al ejecutarlo solo se guardan los CSV en `submissions/`; no se crean archivos adicionales de modelos.
